@@ -1,7 +1,7 @@
 import "./ItemDetail.css";
 import GetItems from "../components/GetItems";
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import styles from "../components/Header.module.css"
@@ -9,27 +9,10 @@ import { useRef } from "react";
 
 function ItemDetail() {
   const params = useParams();
-  const [item, setItem] = useState({
-    // category:"",
-    // idx:0,
-    // img:"",
-    // name:"",
-    // price:0,
-    // quantity:0,
-    // reg_date:""
-  });
+  const [item, setItem] = useState({});
   const [itemCount, setItemCount] = useState(1);
-  const [cartItem, setCartItem] = useState({
-    // id: 0,
-    // userid: "",
-    // itemIdx: 0,
-    // itemName: "",
-    // itemPrice: 0,
-    // itemImg: "",
-    // itemQuantity: 0,
-    // itemRegDate: ""
-  });
-  // const latestItem = useRef(item);
+  const [cartItem, setCartItem] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("item1 : ", item);
@@ -42,25 +25,30 @@ function ItemDetail() {
       if (xhr.status === 200) {
         const data = JSON.parse(xhr.response);
         setItem(data);
-        // setCartItem(JSON.stringify(data));
-        // setCartItem(data);
       }
     }
     console.log("item2 : ", item);
   }, []);
 
-  // useEffect(() => {
-  //   console.log('new', item);
-  //   if (JSON.stringify(item) === '{}') {
-      // setCartItem([
-      //   {
-      //     ...item
-      //   }
-      // ])
-    // }
-    // latestItem.current = item;
-    // console.log('latestItem.current : ', latestItem.current);
-  // });
+  useEffect(() => {
+    console.log('new', cartItem);
+    if (JSON.stringify(cartItem) !== '{}') {
+      const xhr = new XMLHttpRequest();
+      const data = JSON.stringify(cartItem);
+    
+      xhr.open("POST", "http://localhost:3001/cart");
+      xhr.setRequestHeader("content-type", "application/json");
+      xhr.send(data);
+    
+      xhr.onload = () => {
+        if (xhr.status === 201) {
+          console.log('성공');
+        } else {
+          console.log(xhr.status, xhr.statusText);
+        }
+      };
+    }
+  }, [cartItem]);
 
   // const handleCart = () => {
   const handleCart = () => {
@@ -68,66 +56,27 @@ function ItemDetail() {
     console.log(JSON.parse(sessionStorage.getItem("userData")));
     if (!JSON.parse(sessionStorage.getItem("userData"))) {
       if (window.confirm("로그인이 필요합니다.\n로그인 페이지로 이동하시겠습니까?")) {
-        alert("이동");
+        navigate('/login');
       }
     } else {
-      setCartItem([
-        {
-          // ...cartItem,
-          userid : JSON.parse(sessionStorage.getItem("userData"))[0].userid,
-          itemIdx : item[0].idx,
-          itemName : item[0].name,
-          itemPrice : item[0].price,
-          itemImg : item[0].img,
-          itemQuantity : item[0].quantity,
-          itemRegDate : item[0].reg_date
-        }
-      ]);
+      const userIdInput = JSON.parse(sessionStorage.getItem("userData"))[0].userid;
 
-      console.log("cartItem : ", cartItem);
-      // console.log("item : ", item[0].idx);
-      // const xhr = new XMLHttpRequest();
-    
-      //   const data = JSON.stringify(userInfo);
-    
-      //   xhr.open("POST", "http://localhost:3001/user");
-      //   xhr.setRequestHeader("content-type", "application/json");
-      //   xhr.send(data);
-    
-      //   xhr.onload = () => {
-      //     if (xhr.status === 201) {
-      //       const post = JSON.parse(xhr.responseText);
-      //       console.log(post);
-    
-      //       sessionStorage.setItem("userData", JSON.stringify(post));
-      //       setIsLogin(true);
-    
-      //       alert(`${post.nickname}님의 가입을 축하합니다.`);
-      //       navigate('/');
-      //     } else {
-      //       console.log(xhr.status, xhr.statusText);
-      //     }
-      //   };
+      setCartItem(() => {
+        return {
+          category : item[0].category,
+          idx : item[0].idx,
+          img : item[0].img,
+          name : item[0].name,
+          price : item[0].price,
+          quantity : item[0].quantity,
+          reg_date : item[0].reg_date,
+          userid : userIdInput
+        };
+      });
 
-      if (window.confirm("상품이 장바구니에 담겼습니다.\n장바구니로 이동하시겠습니까?")) {
-        // setCartItem([
-        //   {
-        //     userid : JSON.parse(sessionStorage.getItem("userData"))[0].userid,
-        //     // ...cartItem,
-        //     itemIdx : item[0].idx,
-        //     itemName : item[0].name,
-        //     itemPrice : item[0].price,
-        //     itemImg : item[0].img,
-        //     itemQuantity : item[0].quantity,
-        //     itemRegDate : item[0].reg_date
-        //   }
-        // ]);
-  
-        alert("이동");
-        // console.log("cartItem222 : ", cartItem);
-        // console.log(item);
-        // console.log(itemCount);
-
+      if (window.confirm("상품이 장바구니에 담겼습니다.\n장바구니로 이동하시겠습니까?")) { 
+        navigate('/cart');
+        console.log("cartItem222 : ", cartItem);
       }
     }
   };
